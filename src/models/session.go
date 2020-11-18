@@ -1,5 +1,5 @@
 package models
 
 type Session struct {
-	uniqueID string
+	ID uint32
 }
