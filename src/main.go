@@ -13,6 +13,7 @@ func main() {
 	// mux.HandleFunc("/", routes.Home)
 
 	http.HandleFunc("/", routes.Home)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	log.Printf("Listening on port (%s)", port)
 	http.ListenAndServe(port, nil)
