@@ -9,6 +9,9 @@
   <meta id="viewport" name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <link rel="stylesheet" type="text/css" href="/static/css/skeleton.css" />
   <link rel="stylesheet" type="text/css" href="/static/css/normalize.css" />
+
+  <script src="/static/js/jquery-3.5.1.min.js"></script>
+  <script src="/static/js/app.js"></script>
 </head>
 
 <html lang="en">
@@ -16,6 +19,14 @@
 
   <div class="container">
     <h1>Hello World</h1>
+    <form action="create">
+      <input type="button" onclick="createGame()" value="Create New Game"/>
+    </form>
+    <form id="joinForm" action="join">
+      <label for="joinID">Game ID:</label>
+      <input type="text" id="joinIDField" name="joinID"/>
+      <input type="button" onclick="joinGame()" value="Join Game"/>
+    </form>
   </div>
 </body>
 

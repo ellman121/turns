@@ -7,7 +7,7 @@ import (
 
 // Home - Render the home page
 func Home(w http.ResponseWriter, r *http.Request) {
-	log.Println("Serving home page " + r.RemoteAddr)
+	log.Println("[home] [requestIP " + r.RemoteAddr + "]")
 
 	err := rnd.HTML(w, http.StatusOK, "home", nil)
 	if err != nil {
