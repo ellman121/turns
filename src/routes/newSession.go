@@ -2,7 +2,6 @@ package routes
 
 import (
 	"log"
-	"math/rand"
 	"net/http"
 
 	"models"
@@ -12,9 +11,11 @@ import (
 func NewSession(w http.ResponseWriter, r *http.Request) {
 	log.Println("[newID] [requestIP " + r.RemoteAddr + "]")
 
-	ID := rand.Uint32() % 99999
+	s, err := models.NewSession()
+	if err != nil {
+		rnd.HTML(w, http.StatusInternalServerError, "5XX", nil)
+		return
+	}
 
-	rnd.JSON(w, http.StatusOK, models.Session{
-		ID: ID,
-	})
+	rnd.JSON(w, http.StatusOK, *s)
 }
