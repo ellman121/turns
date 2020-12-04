@@ -34,6 +34,13 @@ func Join(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = rnd.JSON(w, http.StatusOK, map[string]interface{}{})
-	log.Printf("%v", s)
+	log.Println("[join] Upgrading connection")
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("[join] error upgrading connection %v", err)
+		return
+	}
+
+	log.Println(s)
+	log.Println(conn.RemoteAddr())
 }
