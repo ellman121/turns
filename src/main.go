@@ -25,7 +25,7 @@ func main() {
 
 	// Create a defualt session for testing purposes
 	go func() {
-		s, err := models.NewSession()
+		s, err := models.NewGame()
 		if err != nil {
 			log.Println("[main] error creating default session")
 			return

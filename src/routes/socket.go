@@ -32,7 +32,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := models.GetSession(gameID)
+	s, err := models.GetGame(gameID)
 	if err != nil {
 		log.Println("[SocketHandler] unable to find game with ID " + gameID)
 		rnd.JSON(w, http.StatusNotFound, map[string]interface{}{})
@@ -49,35 +49,33 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	go manageSocketConnection(conn, s)
 }
 
-func manageSocketConnection(conn *websocket.Conn, session *models.Session) {
+func manageSocketConnection(conn *websocket.Conn, session *models.Game) {
 	defer conn.Close()
 
 	// On connection, we instantly send the current state of the game
-	gameState, err := json.Marshal(session)
+	s, err := json.Marshal(session)
 	if err != nil {
 		log.Printf("[manageSocket] [%v] Failed to marshal game state", session.ID)
 	}
 
-	w, err := conn.NextWriter(websocket.TextMessage)
-	if err != nil {
+	if err := conn.WriteMessage(websocket.TextMessage, s); err != nil {
 		log.Printf("[manageSocket] [%v] Failed to send initial game state to client\n", session.ID)
 	}
-	w.Write(gameState)
-	w.Close()
 
-	for {
-		messageType, _, err := conn.NextReader()
-		if err != nil {
-			log.Println("[manageSocket] Error creating nextReader")
-			return
-		}
+	// for {
+	// 	err := conn.ReadJSON()
+	// 	if err != nil {
+	// 		log.Println("[manageSocket] Error reading JSON from socket")
+	// 		return
+	// 	}
+	// 	r.Read()
 
-		w, err := conn.NextWriter(messageType)
-		if err != nil {
-			log.Println("[manageSocket] Error creating nextWriter")
-		}
+	// 	w, err := conn.NextWriter(messageType)
+	// 	if err != nil {
+	// 		log.Println("[manageSocket] Error creating nextWriter")
+	// 	}
 
-		w.Write([]byte("Hello World"))
-		w.Close()
-	}
+	// 	w.Write([]byte("Hello World"))
+	// 	w.Close()
+	// }
 }

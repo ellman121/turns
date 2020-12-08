@@ -11,7 +11,7 @@ import (
 func NewSession(w http.ResponseWriter, r *http.Request) {
 	log.Println("[newID] [requestIP " + r.RemoteAddr + "]")
 
-	s, err := models.NewSession()
+	s, err := models.NewGame()
 	if err != nil {
 		rnd.HTML(w, http.StatusInternalServerError, "5XX", nil)
 		return

@@ -9,49 +9,49 @@ import (
 )
 
 // SessionCache - Global in-memory store for active sessions
-var sessionCache *gc.Cache
+var cache *gc.Cache
 
-type GameState struct {
+type state struct {
 	ScoreA int `json:"scoreA"`
 	ScoreB int `json:"scoreB"`
 }
 
-// Session an active game session
-type Session struct {
+// Game an active game session
+type Game struct {
 	ID        string
-	GameState GameState `json:"gameState"`
+	GameState state `json:"state"`
 }
 
-// NewSession - Return a new session
-func NewSession() (*Session, error) {
+// NewGame - Return a new session
+func NewGame() (*Game, error) {
 	id := ""
 
 	for {
-		id = newSessionID()
-		_, found := sessionCache.Get(id)
+		id = fmt.Sprintf("%d", rand.Intn(900000)+100000)
+		_, found := cache.Get(id)
 		if !found {
 			break
 		}
 	}
 
-	s := &Session{
+	s := &Game{
 		ID: id,
 	}
-	sessionCache.Set(id, s, 0)
+	cache.Set(id, s, 0)
 
-	return &Session{
+	return &Game{
 		ID: id,
-		GameState: GameState{
+		GameState: state{
 			ScoreA: 0,
 			ScoreB: 0,
 		},
 	}, nil
 }
 
-// GetSession - Return an existing session
-func GetSession(id string) (*Session, error) {
-	if i, found := sessionCache.Get(id); found {
-		s := i.(*Session)
+// GetGame - Return an existing session
+func GetGame(id string) (*Game, error) {
+	if i, found := cache.Get(id); found {
+		s := i.(*Game)
 		return s, nil
 	}
 	return nil, fmt.Errorf("Error: Session with id `%s` not found in the store", id)
@@ -63,7 +63,7 @@ func init() {
 	// rand.Seed(time.Now().UnixNano())
 
 	// create the in-memory session store
-	sessionCache = gc.New(1*time.Hour, 5*time.Minute)
+	cache = gc.New(1*time.Hour, 5*time.Minute)
 
 	// Debug Setup
 
@@ -78,10 +78,4 @@ func init() {
 	// 		}
 	// 	}
 	// }()
-}
-
-func newSessionID() string {
-	// I could make a 6 character string to allow for leading 0s, but it's
-	// frankly just easier to  make the minimum 100000 and generate the rest
-	return fmt.Sprintf("%d", rand.Intn(900000)+100000)
 }
