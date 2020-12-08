@@ -14,7 +14,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// REST API
-	mux.HandleFunc("/newSession", routes.NewSession)
+	mux.HandleFunc("/newGame", routes.NewGame)
 
 	// SOCKET API
 	mux.HandleFunc("/ws", routes.SocketHandler)
@@ -23,14 +23,14 @@ func main() {
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	mux.HandleFunc("/", routes.Home)
 
-	// Create a defualt session for testing purposes
+	// Create a defualt game for testing purposes
 	go func() {
 		s, err := models.NewGame()
 		if err != nil {
-			log.Println("[main] error creating default session")
+			log.Println("[main] error creating default game")
 			return
 		}
-		log.Println("[main] Session created with id " + s.ID)
+		log.Println("[main] Game created with id " + s.ID)
 	}()
 
 	log.Printf("Listening on port (%s)", port)

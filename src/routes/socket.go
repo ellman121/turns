@@ -2,9 +2,12 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"math/rand"
 	"models"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -14,7 +17,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// SocketHandler - SocketHandler a session
+// SocketHandler - Upgrade and connect to socket connections
 func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("[SocketHandler] [requestIP " + r.RemoteAddr + "]")
 
@@ -32,9 +35,9 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := models.GetGame(gameID)
+	g, err := models.GetGame(gameID)
 	if err != nil {
-		log.Println("[SocketHandler] unable to find game with ID " + gameID)
+		log.Printf("[SocketHandler] %v", err)
 		rnd.JSON(w, http.StatusNotFound, map[string]interface{}{})
 		return
 	}
@@ -46,23 +49,31 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go manageSocketConnection(conn, s)
+	go manageSocketConnection(conn, g)
 }
 
-func manageSocketConnection(conn *websocket.Conn, session *models.Game) {
+func manageSocketConnection(conn *websocket.Conn, game *models.Game) {
 	defer conn.Close()
 
-	// Generate a secure player ID and save it in the cache
-
-	// On connection, we instantly send the current state of the game
-	s, err := json.Marshal(session)
+	// Generate a player ID and save it to the game.
+	err := game.AddPlayer(fmt.Sprintf("%d", rand.Intn(900000)+100000))
 	if err != nil {
-		log.Printf("[manageSocket] [%v] Failed to marshal game state", session.ID)
+		log.Printf("[manageSocket] [%v] %v", game.ID, err)
+		conn.WriteControl(websocket.CloseMessage, []byte{}, time.Now())
+		conn.ReadMessage()
+		conn.Close()
 		return
 	}
 
-	if err := conn.WriteMessage(websocket.TextMessage, s); err != nil {
-		log.Printf("[manageSocket] [%v] Failed to send initial game state to client\n", session.ID)
+	// On connection, we instantly send the current state of the game
+	g, err := json.Marshal(game)
+	if err != nil {
+		log.Printf("[manageSocket] [%v] Failed to marshal game state", game.ID)
+		return
+	}
+
+	if err := conn.WriteMessage(websocket.TextMessage, g); err != nil {
+		log.Printf("[manageSocket] [%v] Failed to send initial game state to client\n", game.ID)
 		return
 	}
 

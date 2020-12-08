@@ -7,8 +7,8 @@ import (
 	"models"
 )
 
-// NewSession - Create a new session and return the details via JSON
-func NewSession(w http.ResponseWriter, r *http.Request) {
+// NewGame - Create a new game and return the details via JSON
+func NewGame(w http.ResponseWriter, r *http.Request) {
 	log.Println("[newID] [requestIP " + r.RemoteAddr + "]")
 
 	s, err := models.NewGame()

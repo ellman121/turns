@@ -8,7 +8,7 @@ import (
 	gc "github.com/patrickmn/go-cache"
 )
 
-// SessionCache - Global in-memory store for active sessions
+// cache - Global in-memory store for active games
 var cache *gc.Cache
 
 type playerState struct {
@@ -16,13 +16,13 @@ type playerState struct {
 	Score int
 }
 
-// Game an active game session
+// Game an active game
 type Game struct {
 	ID      string        `json:",omitempty"`
 	Players []playerState `json:"playerStates"`
 }
 
-// NewGame - Return a new session
+// NewGame - Return a new game
 func NewGame() (*Game, error) {
 	id := ""
 
@@ -59,6 +59,19 @@ func GetGame(id string) (*Game, error) {
 		return s, nil
 	}
 	return nil, fmt.Errorf("Game with id `%s` not found in the store", id)
+}
+
+// AddPlayer - Add a player ID to the game and update self in the cache.
+// If the game is full, return an error
+func (g Game) AddPlayer(playerID string) error {
+	if g.Players[0].ID == "" {
+		g.Players[0].ID = playerID
+		return nil
+	} else if g.Players[1].ID == "" {
+		g.Players[1].ID = playerID
+		return nil
+	}
+	return fmt.Errorf("[Game.AddPlayer] Cannot add player to full game")
 }
 
 func init() {

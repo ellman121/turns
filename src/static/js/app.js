@@ -1,7 +1,7 @@
 function createGame() {
     $("#createButton").prop("disabled", true)
     $.ajax({
-        url: "http://localhost:5500/newSession"
+        url: "http://localhost:5500/newGame"
     }).done((gameData) => {
         console.log(gameData.ID)
         $("#joinIDField").val(gameData.ID)
