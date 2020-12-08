@@ -52,14 +52,18 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 func manageSocketConnection(conn *websocket.Conn, session *models.Game) {
 	defer conn.Close()
 
+	// Generate a secure player ID and save it in the cache
+
 	// On connection, we instantly send the current state of the game
 	s, err := json.Marshal(session)
 	if err != nil {
 		log.Printf("[manageSocket] [%v] Failed to marshal game state", session.ID)
+		return
 	}
 
 	if err := conn.WriteMessage(websocket.TextMessage, s); err != nil {
 		log.Printf("[manageSocket] [%v] Failed to send initial game state to client\n", session.ID)
+		return
 	}
 
 	// for {
