@@ -20,17 +20,21 @@ func Join(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		log.Println("[join] error parsing form values from URL")
+		rnd.JSON(w, http.StatusBadRequest, map[string]interface{}{})
 		return
 	}
 
 	gameID := r.Form.Get("gameID")
 	if gameID == "" {
+		log.Println("[join] No gameID passed from client")
+		rnd.JSON(w, http.StatusBadRequest, map[string]interface{}{})
 		return
 	}
 
 	s, err := models.GetSession(gameID)
 	if err != nil {
 		log.Println("[join] unable to find game with ID " + gameID)
+		rnd.JSON(w, http.StatusNotFound, map[string]interface{}{})
 		return
 	}
 
