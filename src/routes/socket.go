@@ -13,8 +13,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// Join - Join a session
-func Join(w http.ResponseWriter, r *http.Request) {
+// SocketHandler - SocketHandler a session
+func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("[join] [requestIP " + r.RemoteAddr + "]")
 
 	err := r.ParseForm()

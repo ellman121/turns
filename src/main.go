@@ -13,14 +13,17 @@ var port = ":5500"
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", routes.Home)
-	mux.HandleFunc("/create", create)
-	mux.HandleFunc("/join", routes.Join)
+	// REST API
 	mux.HandleFunc("/newSession", routes.NewSession)
+
+	// SOCKET API
+	mux.HandleFunc("/ws", routes.SocketHandler)
+
+	// HTTP ROUTES
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.HandleFunc("/", routes.Home)
 
-	log.Printf("Listening on port (%s)", port)
-
+	// Create a defualt session for testing purposes
 	go func() {
 		s, err := models.NewSession()
 		if err != nil {
@@ -30,9 +33,6 @@ func main() {
 		log.Println("[main] Session created with id " + s.ID)
 	}()
 
+	log.Printf("Listening on port (%s)", port)
 	http.ListenAndServe(port, mux)
-}
-
-func create(w http.ResponseWriter, r *http.Request) {
-	log.Println("[create] [requestIP " + r.RemoteAddr + "]")
 }
