@@ -11,9 +11,15 @@ import (
 // SessionCache - Global in-memory store for active sessions
 var sessionCache *gc.Cache
 
+type GameState struct {
+	ScoreA int `json:"scoreA"`
+	ScoreB int `json:"scoreB"`
+}
+
 // Session an active game session
 type Session struct {
-	ID string
+	ID        string
+	GameState GameState `json:"gameState"`
 }
 
 // NewSession - Return a new session
@@ -35,6 +41,10 @@ func NewSession() (*Session, error) {
 
 	return &Session{
 		ID: id,
+		GameState: GameState{
+			ScoreA: 0,
+			ScoreB: 0,
+		},
 	}, nil
 }
 
@@ -48,6 +58,10 @@ func GetSession(id string) (*Session, error) {
 }
 
 func init() {
+	// Initialize the RNG
+	rand.Seed(0)
+	// rand.Seed(time.Now().UnixNano())
+
 	// create the in-memory session store
 	sessionCache = gc.New(1*time.Hour, 5*time.Minute)
 
