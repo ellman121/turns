@@ -28,11 +28,13 @@ func ProcessTransform(t Transform) (*Game, error) {
 
 	// Check the instrucitons
 	switch t.Instruction {
-	case "Reset":
+	case "reset":
 		g.Players[0].Score = t.Value
 		g.Players[1].Score = t.Value
-	case "Apply":
+	case "apply":
 		g.Players[playerIndex].Score += t.Value
+	default:
+		return nil, fmt.Errorf("[ProcessTransform] Invalid instruction sent with transform")
 	}
 
 	cache.Set(t.GameID, g, 0)

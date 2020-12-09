@@ -74,6 +74,23 @@ func (g Game) AddPlayer(playerID string) error {
 	return fmt.Errorf("[Game.AddPlayer] Cannot add player to full game")
 }
 
+// Sanatized - A game returns a copy of itself (does not modify the actual game)
+// with all player IDs replaced with '-' except for the ID passed in
+func (g Game) Sanatized(keepID string) Game {
+	temp := Game{}
+	temp.ID = g.ID
+	temp.Players = make([]playerState, len(g.Players))
+	for i, p := range g.Players {
+		temp.Players[i].Score = p.Score
+		if p.ID != keepID {
+			temp.Players[i].ID = "-"
+		} else {
+			temp.Players[i].ID = keepID
+		}
+	}
+	return temp
+}
+
 func init() {
 	// Initialize the RNG
 	rand.Seed(0)

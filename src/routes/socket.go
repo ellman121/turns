@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
@@ -35,13 +34,6 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g, err := models.GetGame(gameID)
-	if err != nil {
-		log.Printf("[SocketHandler] %v", err)
-		rnd.JSON(w, http.StatusNotFound, map[string]interface{}{})
-		return
-	}
-
 	log.Println("[SocketHandler] Upgrading connection")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -49,48 +41,63 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go manageSocketConnection(conn, g)
+	go manageSocketConnection(conn, gameID)
 }
 
-func manageSocketConnection(conn *websocket.Conn, game *models.Game) {
-	defer conn.Close()
+func manageSocketConnection(conn *websocket.Conn, gameID string) {
+	defer func() {
+		conn.WriteControl(websocket.CloseMessage, []byte{}, time.Now().Add(1))
+		conn.Close()
+	}()
+
+	game, err := models.GetGame(gameID)
+	if err != nil {
+		log.Printf("[manageSocket %v] Failed to get game by ID", gameID)
+		return
+	}
 
 	// Generate a player ID and save it to the game.
-	err := game.AddPlayer(fmt.Sprintf("%d", rand.Intn(900000)+100000))
+	playerID := fmt.Sprintf("%d", rand.Intn(900000)+100000)
+	err = game.AddPlayer(playerID)
 	if err != nil {
-		log.Printf("[manageSocket] [%v] %v", game.ID, err)
-		conn.WriteControl(websocket.CloseMessage, []byte{}, time.Now())
-		conn.ReadMessage()
-		conn.Close()
+		log.Printf("[manageSocket %v] %v", gameID, err)
 		return
 	}
 
 	// On connection, we instantly send the current state of the game
-	g, err := json.Marshal(game)
-	if err != nil {
-		log.Printf("[manageSocket] [%v] Failed to marshal game state", game.ID)
+	if err = conn.WriteJSON(game.Sanatized(playerID)); err != nil {
+		log.Printf("[manageSocket %v] Failed to send initial game state to client\n", gameID)
 		return
 	}
 
-	if err := conn.WriteMessage(websocket.TextMessage, g); err != nil {
-		log.Printf("[manageSocket] [%v] Failed to send initial game state to client\n", game.ID)
-		return
+	for {
+		var t models.Transform
+		err := conn.ReadJSON(&t)
+		if err != nil {
+			if err.Error() == "websocket: close 1000 (normal)" {
+				return
+			}
+
+			log.Println("[manageSocket] Error reading JSON from socket")
+			return
+		}
+
+		// Get the latest version of the game
+		game, err = models.ProcessTransform(t)
+		if err != nil {
+			log.Printf("[manageSocket %v] %v", gameID, err)
+			return
+		}
+
+		// Sanatize the output
+		if game.Players[0].ID == playerID {
+			game.Players[1].ID = ""
+		} else {
+			game.Players[0].ID = ""
+		}
+
+		if err = conn.WriteJSON(game.Sanatized(playerID)); err != nil {
+			log.Printf("[manageSocket %v] Failed to send updated game state to client\n", gameID)
+		}
 	}
-
-	// for {
-	// 	err := conn.ReadJSON()
-	// 	if err != nil {
-	// 		log.Println("[manageSocket] Error reading JSON from socket")
-	// 		return
-	// 	}
-	// 	r.Read()
-
-	// 	w, err := conn.NextWriter(messageType)
-	// 	if err != nil {
-	// 		log.Println("[manageSocket] Error creating nextWriter")
-	// 	}
-
-	// 	w.Write([]byte("Hello World"))
-	// 	w.Close()
-	// }
 }
